@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal</title>
+    <!-- Include TailwindCSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-4">Admin Portal</h1>
+        <table id="users-table" class="w-full bg-white rounded shadow overflow-hidden">
+            <!-- Table header -->
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="px-4 py-2">Email</th>
+                    <th class="px-4 py-2">Last Login</th>
+                    <th class="px-4 py-2">Action</th>
+                </tr>
+            </thead>
+            <!-- Table body -->
+            <tbody>
+                <!-- Table rows with user data will be dynamically added here -->
+            </tbody>
+        </table>
+        <!-- Profile popup (initially hidden) -->
+        <div id="profile-popup" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center" style="display:none;">
+            <div class="bg-white rounded shadow p-6">
+                <h2 class="text-xl font-bold mb-4">User Profile</h2>
+                <p id="profile-email" class="mb-4"></p>
+                <form id="permissions-form" class="mb-4">
+                    <!-- Permissions fields will be dynamically added here -->
+                </form>
+                <div class="flex justify-between">
+                    <button onclick="updatePermissions()" class="bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2">Update Permissions</button>
+                    <button onclick="deleteUser()" class="bg-red-500 hover:bg-red-600 text-white rounded px-4 py-2">Delete User</button>
+                    <button onclick="closeProfilePopup()" class="bg-gray-500 hover:bg-gray-600 text-white rounded px-4 py-2">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Include Firebase and custom JavaScript here -->
+    <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js"></script>
+    <script type="module">
+        // Import Firebase modules and custom JavaScript functions
+        // Initialize Firebase and implement functions to fetch and display user data
+        // Implement functions to handle user permissions editing and deletion
+
+        // Your existing Firebase script goes here
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNrfpbEe1TP_gbNTd9xGtSh74AFN3a2YQ",
+            authDomain: "guestassistant-378f6.firebaseapp.com",
+            projectId: "guestassistant-378f6",
+            storageBucket: "guestassistant-378f6.appspot.com",
+            messagingSenderId: "186980398604",
+            appId: "1:186980398604:web:726d2be366477e6dc3a029"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+
+        // Fetch the list of authorized users from Firestore
+        function fetchAuthorizedUsers() {
+            const usersTableBody = document.querySelector("#users-table tbody");
+            usersTableBody.innerHTML = ""; // Clear the table body
+
+            // Fetch data from Firestore and populate the table
+            const db = firebase.firestore();
+            db.collection("AuthorizedEmails").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    // Create a new table row for each user
+                    const row = usersTableBody.insertRow();
+                    const emailCell = row.insertCell();
+                    const lastLoginCell = row.insertCell();
+                    const actionCell = row.insertCell();
+
+                    // Set the cell values
+                    emailCell.textContent = doc.id; // User email
+                    lastLoginCell.textContent = doc.data().lastLogin || "Unknown"; // Last login time
+                    actionCell.innerHTML = '<button onclick="showProfilePopup(\'' + doc.id + '\')">Edit</button>'; // Edit button
+
+                    // Add the row to the table body
+                    usersTableBody.appendChild(row);
+                });
+            });
+        }
+
+        // Show profile popup for editing user permissions
+        function showProfilePopup(email) {
+            const profilePopup = document.querySelector("#profile-popup");
+            const profileEmail = document.querySelector("#profile-email");
+            const permissionsForm = document.querySelector("#permissions-form");
+
+            // Set the profile email
+            profileEmail.textContent = email;
+
+            // Clear the permissions form
+            permissionsForm.innerHTML = "";
+
+            // Fetch the user's permissions from Firestore
+            const db = firebase.firestore();
+            db.collection("AuthorizedEmails").doc(email).get().then((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    // Dynamically create form fields for each permission
+                    for (const key in userData) {
+                        if (key !== "lastLogin") {
+                            const label = document.createElement("label");
+                            label.textContent = key + ": ";
+                            permissionsForm.appendChild(label);
+
+                            const select = document.createElement("select");
+                            select.name = key;
+                            select.innerHTML = `
+                                <option value="allow">Allow</option>
+                                <option value="block">Block</option>
+                                <option value="hide">Hide</option>
+                            `;
+                            select.value = userData[key];
+                            permissionsForm.appendChild(select);
+                            permissionsForm.appendChild(document.createElement("br"));
+                        }
+                    }
+                }
+            });
+
+            // Show the profile popup
+            profilePopup.style.display = "block";
+        }
+
+        // Update user permissions in Firestore
+        function updatePermissions() {
+            const email = document.querySelector("#profile-email").textContent;
+            const permissionsForm = document.querySelector("#permissions-form");
+
+            // Prepare the updated permissions data
+            const updatedPermissions = {};
+            for (const element of permissionsForm.elements) {
+                if (element.tagName === "SELECT") {
+                    updatedPermissions[element.name] = element.value;
+                }
+            }
+
+            // Update the user's permissions in Firestore
+            const db = firebase.firestore();
+            db.collection("AuthorizedEmails").doc(email).update(updatedPermissions).then(() => {
+                // Refresh the user list
+                fetchAuthorizedUsers();
+                // Close the profile popup
+                closeProfilePopup();
+            });
+        }
+
+        // Delete user from Firestore
+        function deleteUser() {
+            const email = document.querySelector("#profile-email").textContent;
+            if (confirm("Are you sure you want to delete this user?")) {
+                // Delete the user from Firestore
+                const db = firebase.firestore();
+                db.collection("AuthorizedEmails").doc(email).delete().then(() => {
+                    // Refresh the user list
+                    fetchAuthorizedUsers();
+                    // Close the profile popup
+                    closeProfilePopup();
+                });
+            }
+        }
+
+        // Close the profile popup
+        function closeProfilePopup() {
+            const profilePopup = document.querySelector("#profile-popup");
+            profilePopup.style.display = "none";
+        }
+
+        // Fetch and display the list of authorized users on page load
+        fetchAuthorizedUsers();
+    </script>
+</body>
+</html>
+
