@@ -7,43 +7,44 @@
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f8f8f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background-color: #f8f9fa;
+      color: #212529;
       margin: 0;
+      padding: 0;
     }
+
     .container {
-      background-color: #ffffff;
+      max-width: 500px;
+      margin: 0 auto;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       text-align: center;
-      width: 90%;
-      max-width: 400px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
     }
+
     h1 {
-      margin: 0;
       font-size: 24px;
+      margin-bottom: 20px;
     }
-    #signInButton {
-      display: inline-block;
-      margin: 20px 0;
-      padding: 10px 20px;
+
+    .sign-in-button {
       background-color: #4285f4;
       color: #ffffff;
       border: none;
-      border-radius: 4px;
+      padding: 10px 20px;
+      font-size: 16px;
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s ease-in-out;
     }
-    #signInButton:hover {
-      background-color: #357ae8;
+
+    .sign-in-button:hover {
+      background-color: #2b78e4;
     }
+
     #statusMessage {
-      margin: 0;
-      color: #757575;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -51,7 +52,7 @@
   <div class="container">
     <h1>Grant Access</h1>
     <p>
-      <button id="signInButton">Sign in with Google</button>
+      <button id="signInButton" class="sign-in-button">Sign in with Google</button>
     </p>
     <p id="statusMessage"></p>
   </div>
@@ -60,8 +61,7 @@
   <script type="module">
     // Import the Firebase modules
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
+    import { grantAccess } from "./grant_access.js";
 
     // Your Firebase configuration object
     const firebaseConfig = {
@@ -76,10 +76,8 @@
     // Initialize Firebase if not already initialized
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-    // Import and execute the grant_access.js script
-    import { grantAccess } from "./grant_access.js";
-    grantAccess(); // Call the grantAccess function
+    // Add event listener to the "Sign in with Google" button
+    document.getElementById("signInButton").addEventListener("click", grantAccess);
   </script>
 </body>
 </html>
-
