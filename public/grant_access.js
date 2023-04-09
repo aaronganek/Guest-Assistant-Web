@@ -1,20 +1,6 @@
 // Import the required Firebase modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
-
-// Your Firebase configuration object
-const firebaseConfig = {
-  apiKey: "AIzaSyBNrfpbEe1TP_gbNTd9xGtSh74AFN3a2YQ",
-  authDomain: "guestassistant-378f6.firebaseapp.com",
-  projectId: "guestassistant-378f6",
-  storageBucket: "guestassistant-378f6.appspot.com",
-  messagingSenderId: "186980398604",
-  appId: "1:186980398604:web:726d2be366477e6dc3a029"
-};
-
-// Initialize Firebase
-initializeApp(firebaseConfig);
 
 // Export the grantAccess function
 export const grantAccess = () => {
