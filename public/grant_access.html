@@ -4,46 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grant Access</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f8f8f8;
-      color: #333;
-      text-align: center;
-      padding: 40px;
-    }
-
-    h1 {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    #signInButton {
-      background-color: #4285f4;
-      color: #fff;
-      border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
-    }
-
-    #signInButton:hover {
-      background-color: #357ae8;
-    }
-
-    #signInButton:active {
-      background-color: #2f5bb7;
-    }
-
-    #statusMessage {
-      margin-top: 20px;
-      font-size: 16px;
-    }
-  </style>
 </head>
 <body>
   <h1>Grant Access</h1>
@@ -56,7 +16,7 @@
   <script type="module">
     // Import the Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithRedirect } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
 
     // Your Firebase configuration object
