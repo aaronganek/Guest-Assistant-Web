@@ -20,7 +20,8 @@
     import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
 
     // Import and execute the grant_access.js script
-    import "./grant_access.js";
+    import { grantAccess } from "./grant_access.js";
+    grantAccess(); // Call the grantAccess function
   </script>
 </body>
 </html>
