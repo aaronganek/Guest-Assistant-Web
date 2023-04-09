@@ -1,4 +1,9 @@
-// Your Firebase configuration object
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBNrfpbEe1TP_gbNTd9xGtSh74AFN3a2YQ",
   authDomain: "guestassistant-378f6.firebaseapp.com",
@@ -9,31 +14,30 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 // Get DOM elements
 const signInButton = document.getElementById('signInButton');
 const statusMessage = document.getElementById('statusMessage');
 
 // Set up Google Sign-In provider
-const provider = new firebase.auth.GoogleAuthProvider();
+const provider = new GoogleAuthProvider();
 
 // Sign in with Google when the button is clicked
 signInButton.addEventListener('click', () => {
-  firebase.auth().signInWithPopup(provider).then(async (result) => {
+  signInWithPopup(auth, provider).then(async (result) => {
     // Get the token from the URL query parameter
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
 
-    // Access Firestore
-    const db = firebase.firestore();
-
     // Look up the access request information in the "PendingEmails" collection
-    const accessRequestRef = db.collection("PendingEmails").doc(token);
-    const accessRequestSnapshot = await accessRequestRef.get();
+    const accessRequestRef = doc(db, "PendingEmails", token);
+    const accessRequestSnapshot = await getDoc(accessRequestRef);
 
     // Check if the access request exists
-    if (!accessRequestSnapshot.exists) {
+    if (!accessRequestSnapshot.exists()) {
       statusMessage.textContent = "Access request not found.";
       return;
     }
@@ -42,12 +46,10 @@ signInButton.addEventListener('click', () => {
     const accessRequestData = accessRequestSnapshot.data();
 
     // Create a new document in the "AuthorizedEmails" collection
-    await db.collection("AuthorizedEmails")
-      .doc(accessRequestData.email)
-      .set(accessRequestData);
+    await setDoc(doc(db, "AuthorizedEmails", accessRequestData.email), accessRequestData);
 
     // Delete the access request from the "PendingEmails" collection
-    await accessRequestRef.delete();
+    await deleteDoc(accessRequestRef);
 
     // Display a success message
     statusMessage.textContent = "Access granted successfully.";

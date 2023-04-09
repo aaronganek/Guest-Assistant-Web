@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grant Access</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js"></script>
 </head>
 <body>
   <h1>Grant Access</h1>
-  <button id="signInButton">Sign in with Google</button>
-  <div id="statusMessage"></div>
+  <p>
+    <button id="signInButton">Sign in with Google</button>
+  </p>
+  <p id="statusMessage"></p>
 
-  <script src="grant_access.js"></script>
+  <!-- Import the Firebase modular SDK (v9+) -->
+  <script type="module">
+    // Import the Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js";
+
+    // Import and execute the grant_access.js script
+    import "./grant_access.js";
+  </script>
 </body>
 </html>
