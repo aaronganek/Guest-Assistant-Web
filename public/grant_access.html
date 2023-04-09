@@ -8,18 +8,18 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 50px;
+      background-color: #f8f8f8;
     }
-    button {
+    #signInButton {
       background-color: #4285f4;
       color: white;
       border: none;
-      padding: 15px 30px;
-      font-size: 16px;
+      padding: 10px 20px;
+      margin: 10px;
       cursor: pointer;
-      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-    button:hover {
+    #signInButton:hover {
       background-color: #357ae8;
     }
   </style>
@@ -49,7 +49,7 @@
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
+    initializeApp(firebaseConfig);
 
     // Get DOM elements
     const signInButton = document.getElementById('signInButton');
@@ -62,9 +62,10 @@
     const auth = getAuth();
     const db = getFirestore();
 
-    // Handle the result of the redirect after the user signs in
+    // Handle the result of a redirect sign-in
     getRedirectResult(auth).then(async (result) => {
-      if (result.user) {
+      // Check if the result object is defined and has a user property
+      if (result && result.user) {
         // Get the token from the URL query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
