@@ -1,15 +1,23 @@
 // Import the required Firebase modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
 
 // Your Firebase configuration object
 const firebaseConfig = {
-  // Your Firebase configuration here
+  apiKey: "AIzaSyBNrfpbEe1TP_gbNTd9xGtSh74AFN3a2YQ",
+  authDomain: "guestassistant-378f6.firebaseapp.com",
+  projectId: "guestassistant-378f6",
+  storageBucket: "guestassistant-378f6.appspot.com",
+  messagingSenderId: "186980398604",
+  appId: "1:186980398604:web:726d2be366477e6dc3a029"
 };
 
-// Initialize Firebase
-initializeApp(firebaseConfig);
+// Check if any Firebase apps have been initialized
+if (!getApps().length) {
+  // Initialize Firebase if no apps have been initialized
+  initializeApp(firebaseConfig);
+}
 
 // Export the grantAccess function
 export const grantAccess = () => {
@@ -25,19 +33,8 @@ export const grantAccess = () => {
   const db = getFirestore();
 
   // Sign in with Google when the button is clicked
-  signInButton.addEventListener('click', async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const userEmail = result.user.email;
-
-      // Check if the user is an admin
-      const adminsQuery = query(collection(db, "Admins"), where("email", "==", userEmail));
-      const adminsSnapshot = await getDocs(adminsQuery);
-      if (adminsSnapshot.empty) {
-        statusMessage.textContent = "You are not authorized to grant access.";
-        return;
-      }
-
+  signInButton.addEventListener('click', () => {
+    signInWithPopup(auth, provider).then(async (result) => {
       // Get the token from the URL query parameter
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
@@ -63,9 +60,9 @@ export const grantAccess = () => {
 
       // Display a success message
       statusMessage.textContent = "Access granted successfully.";
-    } catch (error) {
+    }).catch((error) => {
       // Display an error message
       statusMessage.textContent = "Error: " + error.message;
-    }
+    });
   });
 };
