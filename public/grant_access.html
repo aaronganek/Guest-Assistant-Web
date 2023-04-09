@@ -6,54 +6,46 @@
   <title>Grant Access</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f8f9fa;
-      color: #212529;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
       padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      background-color: #ffffff;
     }
-
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
     h1 {
-      font-size: 24px;
+      text-align: center;
       margin-bottom: 20px;
     }
-
-    .sign-in-button {
+    #signInButton {
+      display: block;
+      width: 100%;
+      padding: 10px;
       background-color: #4285f4;
       color: #ffffff;
+      text-align: center;
       border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
       border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: background-color 0.2s ease-in-out;
+      cursor: pointer;
+      transition: background-color 0.2s;
     }
-
-    .sign-in-button:hover {
-      background-color: #2b78e4;
+    #signInButton:hover {
+      background-color: #357ae8;
     }
-
     #statusMessage {
       margin-top: 20px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Grant Access</h1>
-    <p>
-      <button id="signInButton" class="sign-in-button">Sign in with Google</button>
-    </p>
+    <button id="signInButton">Sign in with Google</button>
     <p id="statusMessage"></p>
   </div>
 
@@ -61,7 +53,8 @@
   <script type="module">
     // Import the Firebase modules
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
-    import { grantAccess } from "./grant_access.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
 
     // Your Firebase configuration object
     const firebaseConfig = {
@@ -76,8 +69,51 @@
     // Initialize Firebase if not already initialized
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-    // Add event listener to the "Sign in with Google" button
-    document.getElementById("signInButton").addEventListener("click", grantAccess);
+    // Get DOM elements
+    const signInButton = document.getElementById('signInButton');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Set up Google Sign-In provider
+    const provider = new GoogleAuthProvider();
+
+    // Get the Auth and Firestore instances
+    const auth = getAuth();
+    const db = getFirestore();
+
+    // Sign in with Google when the button is clicked
+    signInButton.addEventListener('click', () => {
+      signInWithPopup(auth, provider).then(async (result) => {
+        // Get the token from the URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // Look up the access request information in the "PendingEmails" collection
+        const accessRequestRef = doc(db, "PendingEmails", token);
+        const accessRequestSnapshot = await getDoc(accessRequestRef);
+
+        // Check if the access request exists
+        if (!accessRequestSnapshot.exists()) {
+          statusMessage.textContent = "Access request not found.";
+          return;
+        }
+
+        // Get the access request data
+        const accessRequestData = accessRequestSnapshot.data();
+
+        // Create a new document in the "AuthorizedEmails" collection
+        await setDoc(doc(db, "AuthorizedEmails", accessRequestData.email), accessRequestData);
+
+        // Delete the access request from the "PendingEmails" collection
+        await deleteDoc(accessRequestRef);
+
+        // Display a success message
+        statusMessage.textContent = "Access granted successfully.";
+      }).catch((error) => {
+        // Display an error message
+        statusMessage.textContent = "Error: " + error.message;
+      });
+    });
   </script>
 </body>
 </html>
+
