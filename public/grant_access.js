@@ -1,6 +1,6 @@
 // Import the required Firebase modules
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
 
 // Your Firebase configuration object
@@ -30,34 +30,39 @@ export const grantAccess = () => {
   const db = getFirestore();
 
   // Sign in with Google when the button is clicked
-  signInWithPopup(auth, provider).then(async (result) => {
-    // Get the token from the URL query parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+  signInButton.addEventListener('click', () => {
+    signInWithRedirect(auth, provider);
+  });
 
-    // Look up the access request information in the "PendingEmails" collection
-    const accessRequestRef = doc(db, "PendingEmails", token);
-    const accessRequestSnapshot = await getDoc(accessRequestRef);
+  // Set up an observer for changes in the user's sign-in state
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // User is signed in
+      // Get the token from the URL query parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
 
-    // Check if the access request exists
-    if (!accessRequestSnapshot.exists()) {
-      statusMessage.textContent = "Access request not found.";
-      return;
+      // Look up the access request information in the "PendingEmails" collection
+      const accessRequestRef = doc(db, "PendingEmails", token);
+      const accessRequestSnapshot = await getDoc(accessRequestRef);
+
+      // Check if the access request exists
+      if (!accessRequestSnapshot.exists()) {
+        statusMessage.textContent = "Access request not found.";
+        return;
+      }
+
+      // Get the access request data
+      const accessRequestData = accessRequestSnapshot.data();
+
+      // Create a new document in the "AuthorizedEmails" collection
+      await setDoc(doc(db, "AuthorizedEmails", accessRequestData.email), accessRequestData);
+
+      // Delete the access request from the "PendingEmails" collection
+      await deleteDoc(accessRequestRef);
+
+      // Display a success message
+      statusMessage.textContent = "Access granted successfully.";
     }
-
-    // Get the access request data
-    const accessRequestData = accessRequestSnapshot.data();
-
-    // Create a new document in the "AuthorizedEmails" collection
-    await setDoc(doc(db, "AuthorizedEmails", accessRequestData.email), accessRequestData);
-
-    // Delete the access request from the "PendingEmails" collection
-    await deleteDoc(accessRequestRef);
-
-    // Display a success message
-    statusMessage.textContent = "Access granted successfully.";
-  }).catch((error) => {
-    // Display an error message
-    statusMessage.textContent = "Error: " + error.message;
   });
 };
