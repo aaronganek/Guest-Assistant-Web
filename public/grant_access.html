@@ -35,7 +35,7 @@
   <script type="module">
     // Import the Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
 
     // Your Firebase configuration object
@@ -62,10 +62,15 @@
     const auth = getAuth();
     const db = getFirestore();
 
-    // Handle the result of a redirect sign-in
-    getRedirectResult(auth).then(async (result) => {
-      // Check if the result object is defined and has a user property
-      if (result && result.user) {
+    // Sign in with Google when the button is clicked
+    signInButton.addEventListener('click', () => {
+      signInWithRedirect(auth, provider);
+    });
+
+    // Set up an observer for changes in the user's sign-in state
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in
         // Get the token from the URL query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
@@ -92,16 +97,5 @@
         // Display a success message
         statusMessage.textContent = "Access granted successfully.";
       }
-    }).catch((error) => {
-      // Display an error message
-      statusMessage.textContent = "Error: " + error.message;
-    });
-
-    // Sign in with Google when the button is clicked (using redirect flow)
-    signInButton.addEventListener('click', () => {
-      signInWithRedirect(auth, provider);
     });
   </script>
-</body>
-</html>
-
