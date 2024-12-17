@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Access</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f8f8f8; 
+    }
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    button:hover {
+      background-color: #357ae8;
+    }
+    #popupButton {
+      background-color: #34a853;
+    }
+    #popupButton:hover {
+      background-color: #2b8e4f;
+    }
+  </style>
+</head>
+<body>
+  <h1>Grant Access</h1>
+  <p>
+    <button id="signInButton">Sign in with Google (Redirect)</button>
+  </p>
+  <p>
+    <button id="popupButton">Sign in with Google (Popup)</button>
+  </p>
+  <p id="statusMessage"></p>
+
+  <!-- Import the Firebase modular SDK (v9+) -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, signInWithPopup, onAuthStateChanged } 
+      from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc } 
+      from "https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBNrfpbEe1TP_gbNTd9xGtSh74AFN3a2YQ",
+      authDomain: "guestassistant-378f6.firebaseapp.com",
+      projectId: "guestassistant-378f6",
+      storageBucket: "guestassistant-378f6.appspot.com",
+      messagingSenderId: "186980398604",
+      appId: "1:186980398604:web:726d2be366477e6dc3a029"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+    const provider = new GoogleAuthProvider();
+
+    // DOM elements
+    const signInButton = document.getElementById('signInButton');
+    const popupButton = document.getElementById('popupButton');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Existing Button: Sign-in with Redirect
+    signInButton.addEventListener('click', () => {
+      signInWithRedirect(auth, provider);
+    });
+
+    // New Button: Sign-in with Popup
+    popupButton.addEventListener('click', async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        await handleAccessGrant(result);
+      } catch (error) {
+        console.error("Popup Sign-in Error:", error.message);
+        statusMessage.textContent = "Error during sign-in: " + error.message;
+      }
+    });
+
+    // Handle Access Grant Logic
+    async function handleAccessGrant(userResult) {
+      if (userResult) {
+        // Get the token from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (!token) {
+          statusMessage.textContent = "No token provided in the URL.";
+          return;
+        }
+
+        // Look up the access request in Firestore
+        const accessRequestRef = doc(db, "PendingEmails", token);
+        const accessRequestSnapshot = await getDoc(accessRequestRef);
+
+        if (!accessRequestSnapshot.exists()) {
+          statusMessage.textContent = "Access request not found.";
+          return;
+        }
+
+        // Move data to AuthorizedEmails and delete from PendingEmails
+        const accessRequestData = accessRequestSnapshot.data();
+        await setDoc(doc(db, "AuthorizedEmails", accessRequestData.email), accessRequestData);
+        await deleteDoc(accessRequestRef);
+
+        // Display success message
+        statusMessage.textContent = "Access granted successfully!";
+      }
+    }
+
+    // Observer for Redirect Sign-In
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        handleAccessGrant(user);
+      }
+    });
+  </script>
+</body>
+</html>
